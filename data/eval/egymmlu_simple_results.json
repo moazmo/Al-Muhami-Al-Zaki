@@ -1,0 +1,467 @@
+{
+  "timestamp": "2026-01-07 19:35:16",
+  "benchmark": "EgyMMLU_Simple",
+  "mode": "Direct LLM (no RAG)",
+  "model": "qwen2.5:7b",
+  "metrics": {
+    "total_questions": 50,
+    "successful_runs": 50,
+    "correct": 14,
+    "accuracy": 0.28,
+    "accuracy_pct": 28.0,
+    "avg_latency_seconds": 0.85,
+    "total_time_minutes": 0.7
+  },
+  "detailed_results": [
+    {
+      "question": "في يوم من الأيام، كان فيه طيار بيطير طيارة صغيرة، وفجأة الطيارة خلصت بنزين. وهو نازل يهبط اضطراري، ا",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 2,
+      "is_correct": true,
+      "latency_seconds": 5.96,
+      "success": true
+    },
+    {
+      "question": "فيه قانون بيقول: \"لما الواحد يعرف أو المفروض يعرف إنه بيتم القبض عليه من ضابط شرطة، يبقى واجبه إنه م",
+      "subject": "professional_law",
+      "correct_index": 1,
+      "predicted_index": 2,
+      "is_correct": false,
+      "latency_seconds": 0.65,
+      "success": true
+    },
+    {
+      "question": "واحد دافع ضرائب اتوصله إخطار من الحكومة إن ضريبة الدخل الشخصي بتاعته ناقصة بمبلغ 1,012.69 دولار. الد",
+      "subject": "professional_law",
+      "correct_index": 3,
+      "predicted_index": 0,
+      "is_correct": false,
+      "latency_seconds": 0.59,
+      "success": true
+    },
+    {
+      "question": "واحد من السكان أعلن عن ترشحه لمجلس النواب. فيه قانون في الولاية ده بيقول إن أي حد جديد داخل السياسة ",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 2,
+      "is_correct": true,
+      "latency_seconds": 0.58,
+      "success": true
+    },
+    {
+      "question": "متهم كان زعلان من صاحبه عشان اتجوز حبيبة المتهم القديمة. لما كان صاحبه بيدهن بيته في يوم من الأيام، ",
+      "subject": "professional_law",
+      "correct_index": 1,
+      "predicted_index": 0,
+      "is_correct": false,
+      "latency_seconds": 0.58,
+      "success": true
+    },
+    {
+      "question": "المتهم عمل اعتراف للشرطة، بس محامي الدفاع محتاج يعرف إذا كان الاعتراف ده ممكن يستخدم في المحكمة ولا ",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 0,
+      "is_correct": true,
+      "latency_seconds": 0.52,
+      "success": true
+    },
+    {
+      "question": "زلزال مدمر ضرب دولة أجنبية. الزلزال دمر مئات المنازل والمباني. آلاف السكان ماتوا، أصيبوا، وتشردوا بس",
+      "subject": "professional_law",
+      "correct_index": 1,
+      "predicted_index": 2,
+      "is_correct": false,
+      "latency_seconds": 0.68,
+      "success": true
+    },
+    {
+      "question": "ايه اللي مش من استثناءات البحث من غير إذن؟",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 3,
+      "is_correct": false,
+      "latency_seconds": 0.48,
+      "success": true
+    },
+    {
+      "question": "واحد سوبر ماركت اشترى مراية كبيرة عشان يعلقها على الحيط في المحل. مع المراية نفسها، المصنع بعت قواعد",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 1,
+      "is_correct": false,
+      "latency_seconds": 0.58,
+      "success": true
+    },
+    {
+      "question": "واحد راجل كان اتطلق لكن ما اتطلقش رسمي من مراته الأولى، اتجوز ست تانية وعاش معاها زي جوز وزوجة. الرا",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 1,
+      "is_correct": false,
+      "latency_seconds": 0.63,
+      "success": true
+    },
+    {
+      "question": "بيل، راجل أعزب، كان عنده أرض زراعية في دير وودز، فلوريدا، مؤجرها لواحد بيستأجر. وكمان كان عنده شقة ف",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 1,
+      "is_correct": false,
+      "latency_seconds": 0.71,
+      "success": true
+    },
+    {
+      "question": "لسنوات كتير، الناس اللي بيتعاملوا في بيع وشراء العقارات في ولاية معينة استخدموا عقود البيع بالتقسيط.",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 3,
+      "is_correct": false,
+      "latency_seconds": 0.78,
+      "success": true
+    },
+    {
+      "question": "واحد حط الإعلان التالي في الجرنال المحلي:\"مزاد علني . . . بدون حد أدنى 7 ديسمبر، الساعة 10:00 صباحًا",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 3,
+      "is_correct": false,
+      "latency_seconds": 0.65,
+      "success": true
+    },
+    {
+      "question": "متهم بيقدم سجلات أعماله الكمبيوتر كدليل عشان يوري إنه كان بيراقب الحسابات بتاعته بنية حسنة في شغله. ",
+      "subject": "professional_law",
+      "correct_index": 1,
+      "predicted_index": 1,
+      "is_correct": true,
+      "latency_seconds": 0.57,
+      "success": true
+    },
+    {
+      "question": "فيه قانون بيمنع الناس اللي اتسجلت ضدهم قضية أو اتحدمت حكم في قضية مخدرات، أو اللي بيتلقوا علاج حاليً",
+      "subject": "professional_law",
+      "correct_index": 3,
+      "predicted_index": 2,
+      "is_correct": false,
+      "latency_seconds": 0.65,
+      "success": true
+    },
+    {
+      "question": "واحد راجل كان سايق وهو سكران. كان ماشي بسرعة في شارع في وسط المدينة، وبيتزحزح من حارة لحارة، ولما وص",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 3,
+      "is_correct": false,
+      "latency_seconds": 0.57,
+      "success": true
+    },
+    {
+      "question": "السلطات قبضت على راجل من غير إذن قضائي وحبسوه لمدة 14 يوم من غير ما يحددوا فيه سبب مقنع للاعتقال. في",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 2,
+      "is_correct": true,
+      "latency_seconds": 0.6,
+      "success": true
+    },
+    {
+      "question": "راجل كان عنده أرض على الجنب الجنوبي لطريق سريع. جنوب أرض الراجل كانت فيه قطعة أرض تملكها ست كانت عاي",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 3,
+      "is_correct": false,
+      "latency_seconds": 0.63,
+      "success": true
+    },
+    {
+      "question": "مكتب محاماة \"رين ميكينج\" كان بيشتري أدوات مكتبه من الكتالوجات بشكل عادي. مارتي مدير المكتب شاف كتالو",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 1,
+      "is_correct": false,
+      "latency_seconds": 0.62,
+      "success": true
+    },
+    {
+      "question": "ستّ رفعت قضية على صاحب شغلها القديم في محكمة الولاية، مدعيةً تمييز بسبب العمر والجنس، وفقًا لقانون ا",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 2,
+      "is_correct": false,
+      "latency_seconds": 0.58,
+      "success": true
+    },
+    {
+      "question": "فيه قانون للمدينة بيقول إن محدش ينزل زبالة في حديقة عامة، وإن أي حد يعمل كده هيتعاقب بغرامة مش أكتر ",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 0,
+      "is_correct": false,
+      "latency_seconds": 0.7,
+      "success": true
+    },
+    {
+      "question": "واحد من سكان ولاية كان مالك لمساحة كبيرة من الغابة البكر. قام الساكن بتحويل المساحة \"إلى شعب الولاية",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 3,
+      "is_correct": false,
+      "latency_seconds": 0.69,
+      "success": true
+    },
+    {
+      "question": "شركة كانت بتملك نايت كلوب اتبنى على رصيف بيطلع في نهر كبير. لمدة كذا شهر، أجزاء من المبنى كانت بتتهز",
+      "subject": "professional_law",
+      "correct_index": 3,
+      "predicted_index": 0,
+      "is_correct": false,
+      "latency_seconds": 0.64,
+      "success": true
+    },
+    {
+      "question": "واحد شاب اقترح على صاحبه إنهم يسرقوا تليفزيون شاشة كبيرة من بيت الجيران. صاحبه زعل أوي من الشاب ده و",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 3,
+      "is_correct": false,
+      "latency_seconds": 0.54,
+      "success": true
+    },
+    {
+      "question": "لما تخرج الطالب من الثانوية العامة، التحق بكلية قريبة من المكان اللي ساكن فيه. بس، بما إن الطالب مكن",
+      "subject": "professional_law",
+      "correct_index": 1,
+      "predicted_index": 2,
+      "is_correct": false,
+      "latency_seconds": 0.69,
+      "success": true
+    },
+    {
+      "question": "ست أرملة كانت تمتلك عمارة سكنية. من كام سنة، طالب، بموجب اتفاق مكتوب وموقع، دخل في عقد إيجار لمدة 3 ",
+      "subject": "professional_law",
+      "correct_index": 1,
+      "predicted_index": 3,
+      "is_correct": false,
+      "latency_seconds": 0.59,
+      "success": true
+    },
+    {
+      "question": "موظف بريد مقيم في الولاية أ انزلق وطاح على تلج تكون جنب رصيف التحميل في المبنى في الولاية ب، اللي شر",
+      "subject": "professional_law",
+      "correct_index": 3,
+      "predicted_index": 3,
+      "is_correct": true,
+      "latency_seconds": 0.63,
+      "success": true
+    },
+    {
+      "question": "واحد راجل ماشي في الشارع اتخبط بعربية. الراجل ده جاله إصابة في رقبته. سواق العربية اللي خبطت بالراجل",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 1,
+      "is_correct": false,
+      "latency_seconds": 0.65,
+      "success": true
+    },
+    {
+      "question": "ضابط شرطة اشتغل في قوة شرطة مدينة لمدة 10 سنين. لما الضابط وافق على الوظيفة، خطة المزايا الوظيفية لل",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 0,
+      "is_correct": false,
+      "latency_seconds": 6.25,
+      "success": true
+    },
+    {
+      "question": "إيه السبب اللي ممكن يكون كافٍ أو عذر مقبول عشان يسمح للمتخاصم بتقديم إشعار استئناف متأخر بعد الميعاد",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 2,
+      "is_correct": true,
+      "latency_seconds": 0.56,
+      "success": true
+    },
+    {
+      "question": "صاحب براءة اختراع رفع قضية انتهاك براءة اختراع في المحكمة الفيدرالية ضد مرخص له بالبراءة. اعتقد صاحب",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 1,
+      "is_correct": false,
+      "latency_seconds": 0.62,
+      "success": true
+    },
+    {
+      "question": "راجل قاعد على كرسي شاطئ، بهدوء وفي حالة تأمل مريحة، لما عربية نقل بتجري بسرعة على الرمل دعست على راج",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 0,
+      "is_correct": true,
+      "latency_seconds": 0.72,
+      "success": true
+    },
+    {
+      "question": "صاحب العقار هو المالك الكامل لمساحة أرض عليها مبنى مكاتب كبير. يؤجر صاحب العقار الأرض والمبنى الموجو",
+      "subject": "professional_law",
+      "correct_index": 1,
+      "predicted_index": 1,
+      "is_correct": true,
+      "latency_seconds": 0.78,
+      "success": true
+    },
+    {
+      "question": "صاحب نايت كلوب قدم طلب للحصول على تصريح تقسيم الأراضي المطلوب عشان يفتح نايت كلوب فيه رقص عري في منط",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 1,
+      "is_correct": false,
+      "latency_seconds": 0.69,
+      "success": true
+    },
+    {
+      "question": "الرئيس أعلن إن قوة عسكرية جديدة للقوات السريعة الانتشار هتشترك في تدريبات مشتركة مع القوات العسكرية ",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 1,
+      "is_correct": false,
+      "latency_seconds": 0.62,
+      "success": true
+    },
+    {
+      "question": "راجل ومدرسة دخلوا في عقد مكتوب ينص على إن الراجل هيشتغل لمدة سنة في مهام مختلفة (مدير رياضي، مدرس، م",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 1,
+      "is_correct": false,
+      "latency_seconds": 0.74,
+      "success": true
+    },
+    {
+      "question": "واحد مشجع بيسبول اشترى تلتين تذكرة لمباراة بطولة العالم للبيسبول. المشجع اتصل بصاحبه المقرب ودعاه ير",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 2,
+      "is_correct": false,
+      "latency_seconds": 0.75,
+      "success": true
+    },
+    {
+      "question": "دينيسا ديڤيلوبر لقت قطعة أرض ممتازة تقريبًا، مرخصة تجاريًا في منطقة وسط مدينة بليزانتڤيل. استعانت بم",
+      "subject": "professional_law",
+      "correct_index": 3,
+      "predicted_index": 2,
+      "is_correct": false,
+      "latency_seconds": 0.8,
+      "success": true
+    },
+    {
+      "question": "راجل بيحول ملكية عقار لبنت عمه بـ \"لبنت عمه وورثة جسمها\". بعدين بيحول نفس العقار لبنته في ملكية تامة",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 1,
+      "is_correct": false,
+      "latency_seconds": 0.6,
+      "success": true
+    },
+    {
+      "question": "صاحب البيت مؤجر شقة لمستأجر على أساس شهري، ابتداءً من أول الشهر، مع دفع الإيجار شهريًا. بعد خمسة أشه",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 1,
+      "is_correct": false,
+      "latency_seconds": 0.7,
+      "success": true
+    },
+    {
+      "question": "مصنّع عمل ماركة جديدة لعدة صيد، و باعها في كل حتة في البلد. الكونجرس دلوقتي فرض ضريبة 14 سنت على كل ",
+      "subject": "professional_law",
+      "correct_index": 3,
+      "predicted_index": 3,
+      "is_correct": true,
+      "latency_seconds": 0.6,
+      "success": true
+    },
+    {
+      "question": "في قضية حادث عربية، المدعى عليه ادعى إن المدعي كان مُساهم في الإهمال بسبب قيادته بسرعة كبيرة. محامي ",
+      "subject": "professional_law",
+      "correct_index": 3,
+      "predicted_index": 2,
+      "is_correct": false,
+      "latency_seconds": 0.62,
+      "success": true
+    },
+    {
+      "question": "لو حقوق أساسية معينة ممنوعة من ناس معينة ومش ممنوعة من ناس تانية، يبقى يعتبر إيه نوع المشكلة دي؟",
+      "subject": "professional_law",
+      "correct_index": 1,
+      "predicted_index": 1,
+      "is_correct": true,
+      "latency_seconds": 0.52,
+      "success": true
+    },
+    {
+      "question": "في قانون محلي في مدينة بريزيتاون، بيسمح لرئيس البلدية إنه يقرر مين ممكن ياخد تصريح يتكلم في حديقة ال",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 2,
+      "is_correct": true,
+      "latency_seconds": 0.55,
+      "success": true
+    },
+    {
+      "question": "نفترض إن السؤال ده بيحصل في ولاية بتتبع نظرية الحقوق العينية. ست و شريكها اللي بيعيشوا مع بعض بيشارك",
+      "subject": "professional_law",
+      "correct_index": 0,
+      "predicted_index": 2,
+      "is_correct": false,
+      "latency_seconds": 0.61,
+      "success": true
+    },
+    {
+      "question": "في دعوى قضائية بتهمة الإهمال الطبي، رفع المدعي دعوى قضائية ضد طبيب، مدعيًا أن الأخير فشل في تشخيص حا",
+      "subject": "professional_law",
+      "correct_index": 3,
+      "predicted_index": 2,
+      "is_correct": false,
+      "latency_seconds": 0.63,
+      "success": true
+    },
+    {
+      "question": "محامية شابة كانت بتشتغل ليل في مكتبها ليلة واحدة. لما أخيرًا قررت تروح البيت، راحت على الأسانسير، دخ",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 1,
+      "is_correct": false,
+      "latency_seconds": 0.69,
+      "success": true
+    },
+    {
+      "question": "كان فيه واحد مهتم بالبيئة جدًا، وكان صاحب قطعة أرض كبيرة من الغابة البكر. المهتم بالبيئة نقل ملكية ا",
+      "subject": "professional_law",
+      "correct_index": 1,
+      "predicted_index": 1,
+      "is_correct": true,
+      "latency_seconds": 0.54,
+      "success": true
+    },
+    {
+      "question": "واحد مشتري اشتري جالون لبن خالي الدسم من محل. اللبن، اللي اتبيع في علبة بلاستيك، كان اتصنع و اتغلف م",
+      "subject": "professional_law",
+      "correct_index": 2,
+      "predicted_index": 2,
+      "is_correct": true,
+      "latency_seconds": 0.6,
+      "success": true
+    },
+    {
+      "question": "المتهم كان في موعد لما الضحية دعته فوق لشقتها عشان يشربوا قهوة. المتهم والضحية بدأوا يتلمسوا على الك",
+      "subject": "professional_law",
+      "correct_index": 3,
+      "predicted_index": 0,
+      "is_correct": false,
+      "latency_seconds": 0.65,
+      "success": true
+    }
+  ]
+}

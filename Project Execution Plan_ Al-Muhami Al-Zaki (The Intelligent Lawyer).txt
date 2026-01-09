@@ -1,0 +1,106 @@
+﻿Engineering Roadmap: Al-Muhami Al-Zaki
+Target: A "Corrective RAG" system for Egyptian Law that cites sources and admits ignorance when unsure.
+________________
+Phase 0: The "Pre-Game" (Prerequisites)
+Duration: 1-2 Weeks
+Goal: Master the building blocks before attempting the skyscraper.
+You asked if you should learn "Mini-RAG" first. The answer is Yes. You cannot debug a complex legal retrieval system if you don't understand the basic "Ingest $\rightarrow$ Embed $\rightarrow$ Retrieve" loop.
+1. The Skills Checklist
+Before writing the main project code, ensure you can do the following:
+* Python Proficiency: You need to be comfortable with typing (type hints), decorators, and async/await (for faster API calls).
+* Vector Database Concepts: Understand the difference between Dense Search (semantic meaning) and Sparse Search (keyword matching like BM25). Why? Because in law, if a user searches for "Article 151", you need exact keyword matching, not just "semantic similarity."
+* Prompt Engineering: Learn how to write "System Prompts" that force an LLM to output JSON only.
+2. The "Mini-RAG" Sprint
+Spend one weekend building this exact script (don't worry about a UI yet):
+1. Input: A single PDF (e.g., one page of the Egyptian Penal Code).
+2. Process: Use LangChain to load it, split it into chunks, and embed it using a free model (e.g., sentence-transformers/all-MiniLM-L6-v2).
+3. Storage: Save it to ChromaDB (runs locally on your laptop).
+4. Output: Ask a question and get an answer.
+Once this works, you are ready for the main project.
+________________
+Phase 1: Data Engineering & Compliance
+Duration: Week 3-4
+Goal: Create a clean, compliant, and searchable knowledge base.
+Step 1.1: Data Acquisition
+Do not train on random internet text. You need high-quality legal texts.
+   * Primary Source: The Egyptian Constitution and Civil Code (available as PDFs/Text on official government portals).
+   * Training/Eval Data: Download the Omar-youssef/QA_LAW_Egyptian_dataset from Hugging Face. This contains Q&A pairs to test your model later.1
+   * Benchmark Data: Download the Law subset of UBC-NLP/EgyMMLU. This is your "exam" to prove your model works.2
+Step 1.2: The Privacy Filter (Crucial for Law 151)
+In 2025, handling data responsibly is an engineering requirement.
+   * Task: If you scrape court rulings (Ahkam), they contain real names. You must anonymize them to comply with Egypt's Data Protection Law 151/2020.3
+   * Action: Build a preprocessing function using spaCy or a specific Arabic NER model (like CAMeLBERT-NER) to detect entities labeled PERSON or GPE (Location).
+   * Code Logic:
+Python
+# Conceptual Logic
+text = "ruled against Ahmed Ali in Cairo"
+anonymized = replace_entities(text)
+# Result: "ruled against in"
+
+Documenting this pipeline in your README allows you to talk about "AI Ethics" and "Compliance" in interviews.
+Step 1.3: Strategic Chunking
+Standard chunking (splitting every 500 characters) fails in law because it might cut a sentence in half.
+      * Strategy: Use Recursive Chunking combined with Regex.
+      * Rule: Split text at specific boundaries like "Article" (مادة), "Clause" (بند), or "Section" (باب). This ensures every chunk is a self-contained legal thought.
+________________
+Phase 2: The Core RAG Architecture
+Duration: Week 5-6
+Goal: Build the engine that finds the right laws.
+Step 2.1: Embedding Model Selection
+English models fail at understanding Arabic legal nuances.
+      * Recommended Model: Omartificial-Intelligence-Space/GATE-AraBERT-v1 or intfloat/multilingual-e5-large. These are currently state-of-the-art for Arabic retrieval.4
+Step 2.2: Vector Database (Qdrant)
+We will use Qdrant (Free Cloud Tier) because it supports Hybrid Search.
+      * Setup: Create a cluster on Qdrant Cloud.
+      * Payloads (Metadata): When you upload your chunks, you must attach metadata.
+      * Bad: Just the text.
+      * Good: { "text": "...", "source": "Civil Code", "article_number": "104", "year": "1948" }
+      * Why? This lets you add "Filters" to your UI later (e.g., "Search only Civil Code").
+________________
+Phase 3: The "Corrective" Logic (Advanced Engineering)
+Duration: Week 7
+Goal: Prevent "Hallucinations" (Lying).
+Standard RAG takes retrieved documents and blindly forces an answer. Corrective RAG (CRAG) adds a safety check.5
+Step 3.1: The Grader Agent
+      * Tool: Use Groq API (Llama-3-8B is free and fast) as a "Grader."6
+      * Workflow:
+      1. User asks: "What is the penalty for theft?"
+      2. Retriever finds 3 documents.
+      3. The Grader checks them: "Does Document A actually mention theft penalties?"
+      4. If No, the system discards the document.
+      5. If all documents are discarded, the system replies: "I searched the Penal Code but couldn't find a relevant article." (Instead of making one up).
+Step 3.2: The Generator Agent
+      * Tool: Use Google Gemini Flash 1.5 API (Free tier). It has a massive context window (1 Million tokens), allowing you to feed it many legal articles if needed.7
+      * Prompt: "You are an Egyptian Legal Assistant. You must answer the query using ONLY the provided context. Cite the Article Number for every statement."
+________________
+Phase 4: Interface & Evaluation
+Duration: Week 8
+Goal: Make it usable and prove it works.
+Step 4.1: The UI (Streamlit)
+Build a simple web app using Streamlit (Python only, no HTML/CSS needed).
+      * Feature: Add a sidebar that shows the "Source Documents." When the AI answers, show the user exactly which PDF pages it used. This builds trust.
+Step 4.2: Evaluation (The "Impressive" Part)
+Most students stop at the UI. You will go further.
+      * Tool: Use RAGAS (Retrieval Augmented Generation Assessment) library.8
+      * Task: Run your system against 50 questions from the EgyMMLU dataset.
+      * Metric: Calculate your Faithfulness Score and Answer Relevance.
+      * Portfolio: Put a chart in your GitHub README: "My system achieves 85% Faithfulness on the EgyMMLU Legal Benchmark."
+________________
+Technical Summary: Your Stack
+      * Language: Python 3.10+
+      * Orchestration: LangChain
+      * Database: Qdrant (Free Cloud)
+      * Embeddings: multilingual-e5-large (Hugging Face)
+      * Inference (LLM): Groq (for Grading) + Gemini Flash (for Answering)
+      * Deployment: Docker (containerize it) + Hugging Face Spaces (host it for free).
+Immediate Next Step:
+Start your Mini-RAG this weekend. A single script, a single PDF. Once that works, you have the foundation to build Al-Muhami.
+المصادر التي تم الاقتباس منها
+      1. Omar-youssef/QA_LAW_Egyptian_dataset at main - Hugging Face, تم الوصول بتاريخ ‎ديسمبر 22, 2025، https://huggingface.co/datasets/Omar-youssef/QA_LAW_Egyptian_dataset/tree/main
+      2. UBC-NLP/EgyMMLU · Datasets at Hugging Face, تم الوصول بتاريخ ‎ديسمبر 22, 2025، https://huggingface.co/datasets/UBC-NLP/EgyMMLU
+      3. Legal Alert: Egyptian Court Judgment Tightens Enforcement of Privacy and Data Protection Laws - Shehata & Partners, تم الوصول بتاريخ ‎ديسمبر 22, 2025، https://shehatalaw.com/law-update/legal-alert-egyptian-court-judgment-tightens-enforcement-of-privacy-and-data-protection-laws/
+      4. Swan and ArabicMTEB: Dialect-Aware, Arabic-Centric, Cross-Lingual, and Cross-Cultural Embedding Models and Benchmarks - arXiv, تم الوصول بتاريخ ‎ديسمبر 22, 2025، https://arxiv.org/html/2411.01192v3
+      5. 9 RAG Architectures Every AI Developer Must Know: A Complete Guide with Examples, تم الوصول بتاريخ ‎ديسمبر 22, 2025، https://pub.towardsai.net/rag-architectures-every-ai-developer-must-know-a-complete-guide-f3524ee68b9c?source=rss----98111c9905da---4
+      6. Rate Limits - GroqDocs, تم الوصول بتاريخ ‎ديسمبر 22, 2025، https://console.groq.com/docs/rate-limits
+      7. Gemini API Free Tier 2025: Complete Guide to Rate Limits & Models - LaoZhang-AI, تم الوصول بتاريخ ‎ديسمبر 22, 2025، https://blog.laozhang.ai/api-guides/gemini-api-free-tier/
+      8. Optimizing RAG Pipelines for Arabic: A Systematic Analysis of Core Components - arXiv, تم الوصول بتاريخ ‎ديسمبر 22, 2025، https://arxiv.org/html/2506.06339v1
