@@ -9,6 +9,8 @@
 ![EgyMMLU](https://img.shields.io/badge/EgyMMLU-40%25_Accuracy-yellow.svg)
 ![Ollama](https://img.shields.io/badge/LLM-Ollama_Local-purple.svg)
 
+![Al-Muhami Al-Zaki UI](docs/app_screen.png)
+
 ---
 
 ## 🎯 Overview
