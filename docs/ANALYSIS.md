@@ -1,12 +1,12 @@
 # Al-Muhami Al-Zaki — Technical Analysis & Roadmap
 
-> Generated: 2026-01-09 | Status: MVP Complete
+> Last Updated: 2026-01-11 | Status: **MVP Complete** | Accuracy: **50%**
 
 ---
 
 ## 1. Architecture Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Al-Muhami Al-Zaki                           │
 │              Corrective RAG for Egyptian Law                    │
@@ -31,7 +31,7 @@
         ▼                     ▼
 ┌──────────────┐      ┌──────────────┐
 │ Qdrant Cloud │      │ Ollama Local │
-│ (Vectors)    │      │ (qwen2.5:7b) │
+│ (Vectors)    │      │ (llama3.1)   │
 └──────────────┘      └──────────────┘
 ```
 
@@ -41,135 +41,171 @@
 
 ### 2.1 Ingestion Pipeline (`src/ingest/`)
 
-| File | Purpose | Key Classes/Functions |
-|------|---------|----------------------|
-| `loader.py` | Load PDF/TXT/DOCX | `DocumentLoader.load()` |
-| `chunker.py` | Arabic-aware splitting | `LegalChunker.chunk()`, `chunk_by_article()` |
-| `anonymizer.py` | PII masking (Law 151) | CAMeLBERT-NER based |
-| `embedder.py` | GPU-enabled embedding | `LegalEmbedder.embed_and_upload()` |
-| `schemas.py` | Pydantic models | `LegalChunkPayload` |
+| File            | Purpose                 | Key Functions                      |
+| --------------- | ----------------------- | ---------------------------------- |
+| `loader.py`     | Load PDF/TXT/DOCX       | `DocumentLoader.load()`            |
+| `chunker.py`    | Arabic-aware splitting  | `LegalChunker.chunk()`             |
+| `anonymizer.py` | PII masking (Law 151)   | CAMeLBERT-NER based                |
+| `embedder.py`   | GPU-enabled embedding   | `LegalEmbedder.embed_and_upload()` |
+| `schemas.py`    | Pydantic models         | `LegalChunkPayload`                |
 
 ### 2.2 CRAG Graph (`src/graph/`)
 
-| File | Purpose | Key Functions |
-|------|---------|---------------|
-| `state.py` | TypedDict for graph state | `GraphState`, `create_initial_state()` |
-| `nodes.py` | Graph nodes | `retrieve()`, `grade_documents()`, `generate()`, `rewrite_query()`, `no_answer()` |
-| `edges.py` | Conditional routing | `route_after_grading()` |
-| `builder.py` | Graph compilation | `build_crag_graph()`, `run_query()` |
+| File         | Purpose                 | Key Functions                              |
+| ------------ | ----------------------- | ------------------------------------------ |
+| `state.py`   | TypedDict for state     | `GraphState`, `create_initial_state()`     |
+| `nodes.py`   | Graph nodes             | `retrieve()`, `grade_documents()`, `generate()` |
+| `edges.py`   | Conditional routing     | `route_after_grading()`                    |
+| `builder.py` | Graph compilation       | `build_crag_graph()`, `run_query()`        |
 
 ### 2.3 Prompts (`src/prompts/`)
 
-| File | Purpose |
-|------|---------|
-| `grader.py` | Relevance scoring prompt (lenient) |
-| `generator.py` | Answer generation with citations |
-| `rewriter.py` | Query reformulation |
-
-### 2.4 Scripts (`scripts/`)
-
-| Script | Purpose |
-|--------|---------|
-| `ingest_laws.py` | CLI for document ingestion |
-| `benchmark_egymmlu.py` | Full CRAG+RAG benchmark |
-| `benchmark_simple.py` | LLM-only benchmark |
-| `test_crag.py` | Single query test |
-| `evaluate_ragas.py` | RAGAS metrics |
+| File           | Purpose                              |
+| -------------- | ------------------------------------ |
+| `grader.py`    | Binary relevance scoring             |
+| `generator.py` | Answer generation with citations     |
+| `rewriter.py`  | Query reformulation for retry        |
 
 ---
 
 ## 3. Current Performance
 
-### Benchmark Results (Sample of 10)
+### Custom Egyptian Law Benchmark v2 (20 questions)
 
-| Metric | Score |
-|--------|-------|
-| **Accuracy** | 40.0% |
-| **Faithfulness** | 90.0% |
-| **Retrieval Rate** | 10.0% |
-| **Avg Latency** | ~42s |
+| Category             | Accuracy      | Score |
+| -------------------- | ------------- | ----- |
+| **Overall**          | **50.0%**     | 10/20 |
+| Civil Code           | 🏆 100.0%     | 5/5   |
+| Constitution         | ⭐ 66.7%      | 2/3   |
+| Criminal Procedure   | ⭐ 50.0%      | 1/2   |
+| Personal Status      | ⚠️ 33.3%     | 1/3   |
+| Penal Code           | ⚠️ 14.3%     | 1/7   |
+| **Avg Latency**      | ~22s          | -     |
 
-### Knowledge Base
+### Knowledge Base Status
 
-| Document | Status |
-|----------|--------|
-| Civil Code 1948 | ✅ Ingested |
-| Constitution 2014 | ⏳ Available |
-| Penal Code | ✅ Ingested |
-| Criminal Procedure | ✅ Ingested |
-| Personal Status Law | ✅ Ingested |
+| Document             | Status       | Chunks | Coverage |
+| -------------------- | ------------ | ------ | -------- |
+| Civil Code 1948      | ✅ Ingested  | ~54    | Good     |
+| Criminal Procedure   | ✅ Ingested  | ~19    | Fair     |
+| Penal Code           | ⚠️ Partial  | ~10    | Limited  |
+| Constitution 2014    | ✅ Ingested  | ~10    | Fair     |
+| Personal Status Law  | ⚠️ Partial  | ~7     | Limited  |
 
 ---
 
-## 4. Roadmap
+## 4. Strategic Roadmap
 
-### Phase 1: Optimize (Priority: High)
+### 🔴 Phase 1: Data Expansion (Highest Priority)
 
-- [ ] **Tune Grader Prompt**: Make more lenient, add examples
-- [ ] **Run Full Benchmark**: Get official accuracy score
-- [ ] **Cache Embedder**: Avoid reloading model per query
+**Current bottleneck: Data coverage, not model quality.**
 
-### Phase 2: Expand (Priority: Medium)
+| Task | Impact | Effort | Status |
+| ---- | ------ | ------ | ------ |
+| Ingest more Penal Code articles | +15-25% accuracy | Medium | 🔲 Todo |
+| Ingest more Personal Status articles | +5-10% accuracy | Low | 🔲 Todo |
+| Create matching benchmark questions | Accurate measurement | Low | ✅ Done |
 
-- [ ] **Ingest More Laws**: Commercial, Labor, Administrative
-- [ ] **Custom Q&A Dataset**: Create questions matching our data
-- [ ] **Hybrid Search**: Combine vector + keyword (BM25)
+**Why this first?** The benchmark shows Penal Code at 14% with only 10 chunks. Adding 50+ more chunks could push this to 50%+.
 
-### Phase 3: Production (Priority: Low)
+---
 
-- [ ] **Dockerfile**: Containerization
-- [ ] **Unit Tests**: Achieve 80%+ coverage
-- [ ] **Error Handling**: Graceful failures
-- [ ] **Streaming**: Real-time answer display
-- [ ] **Multi-turn Chat**: Conversation memory
+### 🟡 Phase 2: Model Optimization (Medium Priority)
+
+| Task | Impact | Effort | Status |
+| ---- | ------ | ------ | ------ |
+| Tune Grader Prompt with examples | +3-5% accuracy | Low | 🔲 Todo |
+| Switch to semantic scoring (0-10) | Better relevance | Medium | 🔲 Todo |
+| Cache Embedder (singleton) | -5s latency | Low | 🔲 Todo |
+| Fix language leak in generator | Quality improvement | ✅ Done |
+
+**Grader Tuning Vision:**
+```python
+# Add domain-specific examples:
+"""
+### مثال: متعلق ✅
+السؤال: "ما عقوبة السرقة؟"
+المستند: "مادة 318 - يعاقب على السرقة بالحبس..."
+التقييم: متعلق
+
+### مثال: غير متعلق ❌
+السؤال: "ما عقوبة السرقة؟"
+المستند: "مادة 1 - تسري أحكام هذا القانون..."
+التقييم: غير متعلق
+"""
+```
+
+---
+
+### 🟢 Phase 3: Production Readiness (Lower Priority)
+
+| Task | Purpose |
+| ---- | ------- |
+| Dockerfile | Containerization for deployment |
+| Unit Tests | 80%+ coverage |
+| Streaming | Real-time answer display |
+| Multi-turn Chat | Conversation memory |
+| Error Handling | Graceful failures |
 
 ---
 
 ## 5. Tech Stack
 
-| Component | Technology | Notes |
-|-----------|------------|-------|
-| Framework | LangGraph | State machine orchestration |
-| Vector DB | Qdrant Cloud | Free tier |
-| Embeddings | multilingual-e5-large | GPU-accelerated |
-| LLM | Ollama (qwen2.5:7b) | Local, unlimited |
-| UI | Streamlit | RTL Arabic support |
-| NLP | CAMeL Tools | Arabic NER for anonymization |
+| Component   | Technology                  | Notes                    |
+| ----------- | --------------------------- | ------------------------ |
+| Framework   | LangGraph                   | State machine CRAG       |
+| Vector DB   | Qdrant Cloud                | Free tier, 1639 vectors  |
+| Embeddings  | multilingual-e5-large       | GPU-accelerated (RTX 3060) |
+| Grader LLM  | Ollama (llama3.1:8b)        | Local, better Arabic     |
+| Generator   | Ollama (qwen2.5:7b)         | Local, unlimited         |
+| UI          | Streamlit                   | RTL Arabic support       |
+| NLP         | CAMeL Tools                 | Arabic NER (Law 151)     |
 
 ---
 
-## 6. Environment Variables
+## 6. Quick Commands
 
-```env
-# API Keys
-GROQ_API_KEY=...
-GOOGLE_API_KEY=...
-QDRANT_URL=...
-QDRANT_API_KEY=...
+```bash
+# Activate environment
+.\venv\Scripts\Activate  # Windows
+source venv/bin/activate # Linux/Mac
 
-# Models (Ollama)
-GRADER_MODEL=qwen2.5:7b
-GENERATOR_MODEL=qwen2.5:7b
-EMBEDDING_MODEL=intfloat/multilingual-e5-large
+# Start Ollama (separate terminal)
+ollama serve
+
+# Test single query
+python scripts/test_crag.py --query "ما هو حق الاتفاق في القانون المدني؟"
+
+# Run custom benchmark
+python scripts/benchmark_egyptian.py
+
+# Ingest new law
+python scripts/ingest_laws.py --input "data/raw/law.pdf" \
+  --source-name "قانون العقوبات" \
+  --source-type law \
+  --law-year 2024 \
+  --skip-anonymization
+
+# Start UI
+streamlit run app.py
 ```
 
 ---
 
-## 7. Quick Commands
+## 7. Environment Variables
 
-```bash
-# Start Ollama
-ollama serve
+```env
+# Qdrant Cloud
+QDRANT_URL=https://xxx.cloud.qdrant.io:6333
+QDRANT_API_KEY=xxx
+QDRANT_COLLECTION_NAME=egyptian_law
 
-# Test single query
-python scripts/test_crag.py --query "ما هي حقوق الملكية؟"
+# Models (Ollama)
+GRADER_MODEL=llama3.1:8b
+GENERATOR_MODEL=qwen2.5:7b
+EMBEDDING_MODEL=intfloat/multilingual-e5-large
 
-# Run benchmark
-python scripts/benchmark_egymmlu.py --limit 10
-
-# Ingest new law
-python scripts/ingest_laws.py --input "data/raw/law.pdf" --source-name "..." --source-type law --law-year 2024 --skip-anonymization
-
-# Start UI
-streamlit run app.py
+# Optional (for fallback)
+GROQ_API_KEY=xxx
+GOOGLE_API_KEY=xxx
 ```
