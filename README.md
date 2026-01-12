@@ -9,7 +9,10 @@
 ![Knowledge Base](https://img.shields.io/badge/Knowledge_Base-2600+_Articles-brightgreen.svg)
 ![Ollama](https://img.shields.io/badge/LLM-Ollama_Local-purple.svg)
 
----
+<div align="center">
+  <img src="docs/app_screen.png" alt="Al-Muhami Al-Zaki Interface" width="700"/>
+  <p><em>Arabic RTL Interface — Ask legal questions, get cited answers</em></p>
+</div>
 
 ## 🎯 Overview
 
