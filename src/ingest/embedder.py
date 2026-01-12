@@ -338,3 +338,42 @@ class LegalEmbedder:
             documents.append(doc)
 
         return documents
+
+
+# =============================================================================
+# Singleton Pattern - Cache the embedder to avoid reloading the model
+# =============================================================================
+
+_embedder_instance: Optional[LegalEmbedder] = None
+
+
+def get_embedder() -> LegalEmbedder:
+    """
+    Get the cached LegalEmbedder instance (singleton).
+
+    This avoids reloading the ~1GB embedding model on every query,
+    saving approximately 7 seconds per operation.
+
+    Returns:
+        Cached LegalEmbedder instance
+    """
+    global _embedder_instance
+
+    if _embedder_instance is None:
+        logger.info("Creating new LegalEmbedder instance (singleton)")
+        _embedder_instance = LegalEmbedder()
+    else:
+        logger.debug("Using cached LegalEmbedder instance")
+
+    return _embedder_instance
+
+
+def clear_embedder_cache() -> None:
+    """
+    Clear the cached embedder instance.
+
+    Useful for testing or when settings change.
+    """
+    global _embedder_instance
+    _embedder_instance = None
+    logger.info("Embedder cache cleared")

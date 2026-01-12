@@ -34,15 +34,15 @@ async def retrieve(state: GraphState) -> Dict[str, Any]:
     Returns:
         State update with 'documents' list
     """
-    from src.ingest.embedder import LegalEmbedder
+    from src.ingest.embedder import get_embedder
 
     settings = get_settings()
     question = state["question"]
 
     logger.info(f"Retrieving documents for: {question[:50]}...")
 
-    # Initialize embedder and search
-    embedder = LegalEmbedder()
+    # Use cached embedder (singleton) to avoid model reload
+    embedder = get_embedder()
     results = embedder.search(
         query=question,
         top_k=settings.retrieval_top_k,
