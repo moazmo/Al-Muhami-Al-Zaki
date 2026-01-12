@@ -6,7 +6,7 @@
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![Law 151 Compliant](https://img.shields.io/badge/Law%20151%2F2020-Compliant-orange.svg)
-![EgyMMLU](https://img.shields.io/badge/EgyMMLU-40%25_Accuracy-yellow.svg)
+![Benchmark](https://img.shields.io/badge/Benchmark-60%25_Accuracy-brightgreen.svg)
 ![Ollama](https://img.shields.io/badge/LLM-Ollama_Local-purple.svg)
 
 ![Al-Muhami Al-Zaki UI](docs/app_screen.png)
@@ -18,18 +18,38 @@
 **Al-Muhami Al-Zaki** is a Corrective RAG (CRAG) system designed for Egyptian legal research. Unlike standard RAG systems that may hallucinate, this system:
 
 1. **Retrieves** relevant legal documents from a vector database
-2. **Grades** each document for relevance using a fast LLM (Llama-3)
+2. **Grades** each document for relevance using a local LLM (Ollama llama3.1:8b)
 3. **Validates** that sufficient context exists before answering
 4. **Generates** answers with mandatory source citations
 5. **Admits ignorance** when information is not available
 
 ### Key Features
 
-- 🔍 **Semantic Search** on Egyptian laws using multilingual embeddings
-- ⚖️ **Corrective Logic** that prevents hallucination
-- 📖 **Mandatory Citations** (Law Number, Article, Year)
-- 🔒 **Privacy Compliant** with Egypt Law 151/2020 (PII anonymization)
-- 💸 **Zero Cost** — Uses free tiers (Groq, Gemini, Qdrant)
+| Feature | Description |
+|---------|-------------|
+| 🔍 **Semantic Search** | Multilingual E5-Large embeddings for Arabic legal texts |
+| ⚖️ **Corrective Logic** | Document grading prevents hallucination |
+| 📖 **Mandatory Citations** | Every answer cites Law Number, Article, Year |
+| 🔒 **Privacy Compliant** | CAMeLBERT-NER for PII anonymization (Law 151/2020) |
+| 💸 **Zero API Cost** | Fully local with Ollama (optional cloud fallback) |
+| 🌐 **RTL Arabic UI** | Streamlit interface designed for Arabic text |
+
+---
+
+## 📊 Performance
+
+### Egyptian Law Benchmark v2 (20 Questions)
+
+| Category | Accuracy | Score |
+|----------|----------|-------|
+| **Overall** | **60.0%** | 12/20 |
+| Civil Code | 🏆 100.0% | 5/5 |
+| Personal Status | ⭐ 66.7% | 2/3 |
+| Constitution | ⭐ 66.7% | 2/3 |
+| Criminal Procedure | ⭐ 50.0% | 1/2 |
+| Penal Code | 28.6% | 2/7 |
+
+**Average Latency**: ~23 seconds per query
 
 ---
 
@@ -49,7 +69,7 @@
                                   ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                          GRADE                                  │
-│              Llama-3 (Groq) - Relevance Scoring                 │
+│              Ollama (llama3.1:8b) - Relevance Scoring           │
 └─────────────────────────────────┬───────────────────────────────┘
                                   │
                     ┌─────────────┼─────────────┐
@@ -57,13 +77,29 @@
                     ▼             ▼             ▼
               ┌──────────┐  ┌──────────┐  ┌──────────┐
               │ GENERATE │  │ REWRITE  │  │NO ANSWER │
-              │ (Gemini) │  │ (Retry)  │  │  (Admit) │
+              │ (Ollama) │  │ (Retry)  │  │  (Admit) │
               └──────────┘  └──────────┘  └──────────┘
 ```
+
+### CRAG Flow
+
+1. **Retrieve**: Query Qdrant for top-5 similar legal chunks
+2. **Grade**: LLM evaluates relevance of each chunk (binary: relevant/irrelevant)
+3. **Route**: 
+   - If relevant docs found → Generate answer
+   - If no relevant docs → Rewrite query and retry (max 2 attempts)
+   - If max retries reached → Admit "I don't know"
+4. **Generate**: Synthesize answer with mandatory citations
 
 ---
 
 ## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.10+
+- [Ollama](https://ollama.ai/) installed and running
+- GPU recommended (RTX 3060 or better for embeddings)
 
 ### 1. Clone & Install
 
@@ -73,41 +109,42 @@ cd Al-Muhami-Al-Zaki
 
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: .\venv\Scripts\Activate
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Configure Environment
+### 2. Download Ollama Models
+
+```bash
+# Start Ollama (in separate terminal)
+ollama serve
+
+# Pull required models
+ollama pull llama3.1:8b   # Grader
+ollama pull qwen2.5:7b    # Generator
+```
+
+### 3. Configure Environment
 
 ```bash
 cp .env.example .env
-# Edit .env with your API keys:
-# - GROQ_API_KEY (https://console.groq.com/keys)
-# - GOOGLE_API_KEY (https://aistudio.google.com/apikey)
-# - QDRANT_URL & QDRANT_API_KEY (https://cloud.qdrant.io/)
+# Edit .env with your Qdrant Cloud credentials
 ```
 
-### 3. Ingest Legal Documents
+### 4. Ingest Legal Documents
 
 ```bash
-# Ingest a single law
 python scripts/ingest_laws.py \
     --input data/raw/civil_code.pdf \
     --source-name "القانون المدني المصري" \
-    --law-number 131 \
-    --law-year 1948
-
-# Ingest a directory
-python scripts/ingest_laws.py \
-    --input data/raw/ \
-    --recursive \
-    --source-name "القوانين المصرية" \
-    --law-year 2020
+    --source-type law \
+    --law-year 1948 \
+    --skip-anonymization
 ```
 
-### 4. Run the Application
+### 5. Run the Application
 
 ```bash
 streamlit run app.py
@@ -120,34 +157,40 @@ streamlit run app.py
 ```
 Al-Muhami-Al-Zaki/
 ├── src/
-│   ├── ingest/          # Data Engineering (ETL)
-│   │   ├── loader.py    # PDF/TXT/DOCX loading
-│   │   ├── anonymizer.py # PII masking (Law 151)
-│   │   ├── chunker.py   # Legal-aware text splitting
-│   │   └── embedder.py  # Vector embedding & Qdrant
+│   ├── ingest/               # Data Engineering (ETL)
+│   │   ├── loader.py         # PDF/TXT/DOCX loading
+│   │   ├── anonymizer.py     # PII masking (Law 151)
+│   │   ├── chunker.py        # Arabic-aware legal splitting
+│   │   └── embedder.py       # E5 embedding + Qdrant upload
 │   │
-│   ├── graph/           # CRAG State Machine
-│   │   ├── state.py     # GraphState definition
-│   │   ├── nodes.py     # Retrieve/Grade/Generate
-│   │   ├── edges.py     # Conditional routing
-│   │   └── builder.py   # LangGraph compilation
+│   ├── graph/                # CRAG State Machine
+│   │   ├── state.py          # GraphState TypedDict
+│   │   ├── nodes.py          # retrieve, grade, generate, rewrite
+│   │   ├── edges.py          # Conditional routing
+│   │   └── builder.py        # LangGraph compilation
 │   │
-│   ├── prompts/         # LLM System Prompts
-│   │   ├── grader.py    # Relevance grader
-│   │   ├── generator.py # Answer generator
-│   │   └── rewriter.py  # Query rewriter
+│   ├── prompts/              # LLM System Prompts
+│   │   ├── grader.py         # Binary relevance grader
+│   │   ├── generator.py      # Citation-aware generator
+│   │   └── rewriter.py       # Query reformulator
 │   │
-│   └── utils/           # Shared Utilities
-│       ├── config.py    # Settings loader
-│       └── logger.py    # Structured logging
+│   └── clients/              # API Clients
+│       ├── gemini_client.py  # Google Gemini (fallback)
+│       └── groq_client.py    # Groq/Llama (fallback)
 │
 ├── scripts/
-│   ├── ingest_laws.py   # Ingestion CLI
-│   └── test_retrieval.py # Retrieval test
+│   ├── ingest_laws.py        # Document ingestion CLI
+│   ├── benchmark_egyptian.py # Custom benchmark runner
+│   ├── test_crag.py          # Single query tester
+│   └── analyze_qdrant.py     # Database analyzer
 │
-├── app.py               # Streamlit UI
-├── requirements.txt
-└── .env.example
+├── data/
+│   ├── raw/                  # Source PDFs
+│   └── eval/                 # Benchmark files & results
+│
+├── app.py                    # Streamlit UI
+├── requirements.txt          # Dependencies
+└── docs/ANALYSIS.md          # Technical analysis
 ```
 
 ---
@@ -156,7 +199,7 @@ Al-Muhami-Al-Zaki/
 
 This system is designed for **Egypt Data Protection Law 151/2020** compliance:
 
-- **Anonymization Pipeline**: Names, locations, and organizations are masked before embedding
+- **Anonymization Pipeline**: Names, locations, and organizations are masked using CAMeLBERT-NER
 - **Audit Trail**: Every anonymization is logged for compliance review
 - **No Permanent Storage**: User queries are not persisted
 
@@ -171,16 +214,23 @@ Output: "حكم ضد [شخص] المقيم في [مكان]"
 
 ## 📊 Evaluation
 
-Run RAGAS evaluation against the EgyMMLU benchmark:
+### Run Custom Benchmark
 
 ```bash
-python scripts/evaluate_ragas.py --dataset data/egymlu_law_subset.json
+python scripts/benchmark_egyptian.py
 ```
 
-Metrics tracked:
-- **Faithfulness**: Does the answer match the sources?
-- **Answer Relevance**: Is the answer useful?
-- **Context Precision**: Are the right documents retrieved?
+### Test Single Query
+
+```bash
+python scripts/test_crag.py --query "ما هي عقوبة السرقة؟"
+```
+
+### Analyze Qdrant Database
+
+```bash
+python scripts/analyze_qdrant.py
+```
 
 ---
 
@@ -188,13 +238,33 @@ Metrics tracked:
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
-| **Orchestration** | LangGraph | Cyclic state machine |
-| **Vector DB** | Qdrant Cloud | Free tier, hybrid search |
-| **Embeddings** | E5-Large | Multilingual, Arabic support |
-| **Grader LLM** | Llama-3 (Groq) | Fast, free relevance scoring |
-| **Generator LLM** | Gemini Flash | High context, free tier |
-| **UI** | Streamlit | Python-only interface |
-| **Arabic NLP** | CAMeLBERT-NER | PII detection |
+| **Orchestration** | LangGraph | Cyclic state machine CRAG |
+| **Vector DB** | Qdrant Cloud | Semantic search, ~1900 vectors |
+| **Embeddings** | multilingual-e5-large | Arabic-optimized, GPU-accelerated |
+| **Grader LLM** | Ollama (llama3.1:8b) | Local, fast relevance scoring |
+| **Generator LLM** | Ollama (qwen2.5:7b) | Local, unlimited generation |
+| **UI** | Streamlit | RTL Arabic support |
+| **Arabic NLP** | CAMeLBERT-NER | PII detection for Law 151 |
+
+---
+
+## ⚙️ Environment Variables
+
+```env
+# Qdrant Cloud (Required)
+QDRANT_URL=https://xxx.cloud.qdrant.io:6333
+QDRANT_API_KEY=xxx
+QDRANT_COLLECTION_NAME=egyptian_law
+
+# Models (Ollama - Local)
+GRADER_MODEL=llama3.1:8b
+GENERATOR_MODEL=qwen2.5:7b
+EMBEDDING_MODEL=intfloat/multilingual-e5-large
+
+# Optional (Cloud Fallback)
+GROQ_API_KEY=xxx
+GOOGLE_API_KEY=xxx
+```
 
 ---
 

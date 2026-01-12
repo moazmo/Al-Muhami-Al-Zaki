@@ -57,28 +57,31 @@ def extract_answer_choice(generated: str, choices: Dict[str, str]) -> str:
     """
     Extract the answer choice (A/B/C/D) from generated text using regex patterns.
 
-    Looks for patterns like:
-    - "A)" or "B)" at start of lines
-    - "الإجابة: A" or "الإجابة الصحيحة: B"
-    - "الإجابة هي: C" or "الجواب: D"
-    - Bold markers like "**A)**" or "**B**"
+    Uses multiple strategies:
+    1. Priority patterns - explicit answer declarations
+    2. Standalone letter patterns - B) or (B) at meaningful positions
+    3. Content-based matching - check if answer describes a choice's content
+    4. Letter counting fallback
     """
     import re
 
     # Normalize text
     text = generated.strip()
 
-    # Priority patterns (most explicit mentions of the answer)
+    # =========================================================================
+    # PRIORITY 1: Explicit answer declarations (most reliable)
+    # =========================================================================
     priority_patterns = [
-        # Arabic explicit answer patterns
-        r"الإجابة\s*(?:الصحيحة)?\s*(?:هي)?[:：]?\s*([A-Da-d])",
-        r"الجواب\s*(?:الصحيح)?\s*(?:هو)?[:：]?\s*([A-Da-d])",
-        r"الاختيار\s*(?:الصحيح)?[:：]?\s*([A-Da-d])",
-        # Bold answer patterns
-        r"\*\*([A-Da-d])\)",
-        r"\*\*([A-Da-d])\*\*\)",
-        # "Answer: X" pattern
-        r"(?:^|\n)\s*([A-Da-d])\)",
+        # Arabic: الإجابة الصحيحة هي: B or الإجابة: B
+        r"الإجابة\s*(?:الصحيحة)?\s*(?:هي)?[:：]?\s*\n*\s*([A-Da-d])[)\)]?",
+        r"الجواب\s*(?:الصحيح)?\s*(?:هو)?[:：]?\s*\n*\s*([A-Da-d])[)\)]?",
+        r"الاختيار\s*(?:الصحيح)?[:：]?\s*\n*\s*([A-Da-d])[)\)]?",
+        # Arabic: لذا الإجابة هي or الإجابة المناسبة
+        r"لذا\s*الإجابة\s*(?:الصحيحة)?\s*(?:هي)?[:：]?\s*\n*\s*([A-Da-d])[)\)]?",
+        r"الإجابة\s*المناسبة\s*(?:هي)?[:：]?\s*\n*\s*([A-Da-d])[)\)]?",
+        # English patterns
+        r"(?:the\s*)?answer\s*(?:is)?[:：]?\s*([A-Da-d])[)\)]?",
+        r"correct\s*(?:answer)?[:：]?\s*([A-Da-d])[)\)]?",
     ]
 
     for pattern in priority_patterns:
@@ -86,29 +89,90 @@ def extract_answer_choice(generated: str, choices: Dict[str, str]) -> str:
         if match:
             return match.group(1).upper()
 
-    # Secondary: Look for choice content matching
-    # Check if the answer text contains the exact choice content
+    # =========================================================================
+    # PRIORITY 2: Bold or emphasized answer patterns
+    # =========================================================================
+    bold_patterns = [
+        r"\*\*([A-Da-d])\)",  # **A)
+        r"\*\*([A-Da-d])\*\*\)",  # **A**)
+        r"\*\*([A-Da-d])\*\*",  # **A**
+        r"__([A-Da-d])__",  # __A__
+    ]
+
+    for pattern in bold_patterns:
+        match = re.search(pattern, text)
+        if match:
+            return match.group(1).upper()
+
+    # =========================================================================
+    # PRIORITY 3: Standalone letter at start of line or after newline
+    # =========================================================================
+    # Match patterns like "B) text" at the start of a line (indicates answer)
+    standalone_patterns = [
+        r"(?:^|\n)\s*([A-Da-d])\)\s+\S",  # B) followed by text on new line
+        r"(?:^|\n)\s*\(([A-Da-d])\)\s+\S",  # (B) followed by text on new line
+        r"：\s*([A-Da-d])[)\)]",  # Chinese colon followed by letter
+    ]
+
+    for pattern in standalone_patterns:
+        match = re.search(pattern, text, re.MULTILINE)
+        if match:
+            return match.group(1).upper()
+
+    # =========================================================================
+    # PRIORITY 4: Content-based matching
+    # Check if the generated text strongly indicates a specific choice
+    # =========================================================================
+    choice_scores = {letter: 0 for letter in "ABCD"}
+
     for letter, choice_text in choices.items():
-        # Check if the choice text appears prominently
+        # Skip very short choice texts (single words)
+        if len(choice_text) < 5:
+            continue
+
+        # Check if choice content appears in the answer
         if choice_text in text:
-            # Make sure it's indicated as the answer (not just mentioned)
-            choice_pattern = rf"{letter}\)\s*{re.escape(choice_text[:20])}"
-            if re.search(choice_pattern, text):
+            choice_scores[letter] += 3
+
+        # Check if first 15 chars of choice appear
+        if choice_text[:15] in text:
+            choice_scores[letter] += 2
+
+        # Check for pattern like "B) choice_text" or "B- choice_text"
+        choice_pattern = rf"{letter}[)\-]\s*{re.escape(choice_text[:20])}"
+        if re.search(choice_pattern, text, re.IGNORECASE):
+            choice_scores[letter] += 5  # Strong signal
+
+    # Return the highest scoring choice if it has enough confidence
+    max_score = max(choice_scores.values())
+    if max_score >= 3:
+        for letter, score in choice_scores.items():
+            if score == max_score:
                 return letter
 
-    # Tertiary: Count letter mentions in answer context
-    letter_counts = {"A": 0, "B": 0, "C": 0, "D": 0}
+    # =========================================================================
+    # PRIORITY 5: Letter counting in answer-like contexts
+    # =========================================================================
+    letter_counts = {letter: 0 for letter in "ABCD"}
+
     for letter in letter_counts:
-        # Count explicit choice mentions
-        pattern = rf"(?:^|\s){letter}\)|\({letter}\)|{letter}[)）]"
-        letter_counts[letter] = len(re.findall(pattern, text, re.MULTILINE))
+        # Count patterns like B), (B), B., B-
+        patterns = [
+            rf"(?:^|\s){letter}\)",
+            rf"\({letter}\)",
+            rf"{letter}[)）]",
+            rf"(?:^|\n)\s*{letter}\.",
+        ]
+        for pattern in patterns:
+            letter_counts[letter] += len(re.findall(pattern, text, re.MULTILINE))
 
     # Return the most mentioned letter if any has clear majority
     max_count = max(letter_counts.values())
     if max_count > 0:
-        for letter, count in letter_counts.items():
-            if count == max_count:
-                return letter
+        # Check if there's a clear winner (at least 2x more than others)
+        winners = [l for l, c in letter_counts.items() if c == max_count]
+        if len(winners) == 1:
+            return winners[0]
 
     return "NONE"
 
