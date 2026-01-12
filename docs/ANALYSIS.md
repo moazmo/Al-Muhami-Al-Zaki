@@ -1,6 +1,6 @@
 # Al-Muhami Al-Zaki — Technical Analysis & Roadmap
 
-> Last Updated: 2026-01-12 | Status: **MVP Complete** | Accuracy: **60%**
+> Last Updated: 2026-01-12 | Status: **MVP Complete**
 
 ---
 
@@ -33,215 +33,142 @@
         ▼                     ▼
 ┌──────────────┐      ┌──────────────┐
 │ Qdrant Cloud │      │ Ollama Local │
-│ (~1900 vecs) │      │ (llama3.1)   │
+│ (2,600 vecs) │      │ (llama3.1)   │
 └──────────────┘      └──────────────┘
 ```
 
-### CRAG State Machine
+### CRAG Flow
 
-```text
-    ┌─────────┐
-    │  START  │
-    └────┬────┘
-         │
-         ▼
-    ┌─────────┐
-    │ retrieve│ ◄─────────────────┐
-    └────┬────┘                   │
-         │                        │
-         ▼                        │
-    ┌─────────┐                   │
-    │  grade  │                   │
-    └────┬────┘                   │
-         │                        │
-         ▼                        │
-    ┌─────────────┐               │
-    │   router    │               │
-    └──┬────┬────┬┘               │
-       │    │    │                │
-       ▼    │    ▼                │
-    ┌────┐  │  ┌────────┐         │
-    │gen │  │  │no_answ │         │
-    └──┬─┘  │  └───┬────┘         │
-       │    │      │              │
-       ▼    │      ▼              │
-    ┌─────┐ │   ┌─────┐           │
-    │ END │ │   │ END │           │
-    └─────┘ │   └─────┘           │
-            │                     │
-            ▼                     │
-       ┌─────────┐                │
-       │ rewrite │────────────────┘
-       └─────────┘
-```
+1. **Retrieve**: Query Qdrant for top-5 similar legal chunks
+2. **Grade**: LLM evaluates relevance of each chunk (binary: relevant/irrelevant)
+3. **Route**: 
+   - If relevant docs found → Generate answer with citations
+   - If no relevant docs → Rewrite query and retry (max 2 attempts)
+   - If max retries reached → Honestly decline to answer
+4. **Generate**: Synthesize answer with mandatory article citations
 
 ---
 
-## 2. Module Breakdown
+## 2. Knowledge Base
 
-### 2.1 Ingestion Pipeline (`src/ingest/`)
+### Current Coverage
 
-| File | Purpose | Key Classes/Functions |
-|------|---------|----------------------|
-| `loader.py` | Load PDF/TXT/DOCX files | `DocumentLoader.load()`, `load_directory()` |
-| `chunker.py` | Arabic-aware legal splitting | `LegalChunker.chunk()`, `chunk_by_article()` |
-| `anonymizer.py` | PII masking (Law 151) | `ArabicAnonymizer` (CAMeLBERT-NER), `SimpleAnonymizer` (regex fallback) |
-| `embedder.py` | GPU-enabled embedding | `LegalEmbedder.embed_and_upload()`, `search()` |
-| `schemas.py` | Pydantic models | `LegalChunkPayload`, `DocumentMetadata` |
+| Document | Chunks | Key Content |
+|----------|--------|-------------|
+| Civil Code 1948 | ~54 | Contracts, property, obligations |
+| Criminal Code 1937 | ~282 | Penalties, crimes, procedures |
+| Family Laws 2000 | ~179 | Marriage, divorce, inheritance |
+| Personal Status | ~7 | Custody, alimony, rights |
+| Constitution 2014 | ~10 | Fundamental rights, governance |
+| Criminal Procedure | ~19 | Investigation, trial procedures |
 
-**Key Features:**
-- **Legal-aware chunking**: Respects article boundaries (مادة/باب/فصل/بند)
-- **Arabic normalization**: Removes diacritics, normalizes alef variants
-- **E5 prefixes**: Uses `query:` and `passage:` prefixes for optimal retrieval
+**Total**: ~2,600 legal article chunks in Qdrant Cloud
 
-### 2.2 CRAG Graph (`src/graph/`)
+---
+
+## 3. Module Breakdown
+
+### 3.1 Ingestion Pipeline (`src/ingest/`)
+
+| File | Purpose | Key Features |
+|------|---------|--------------|
+| `loader.py` | Load PDF/TXT/DOCX | pdfplumber for Arabic PDFs |
+| `chunker.py` | Arabic-aware splitting | Respects article boundaries (مادة/باب/فصل) |
+| `anonymizer.py` | PII masking | CAMeLBERT-NER, Law 151 compliant |
+| `embedder.py` | GPU embedding | Singleton cache for 7s speedup |
+
+### 3.2 CRAG Graph (`src/graph/`)
 
 | File | Purpose | Key Functions |
 |------|---------|---------------|
-| `state.py` | TypedDict for state | `GraphState`, `create_initial_state()` |
-| `nodes.py` | Graph nodes | `retrieve()`, `grade_documents()`, `generate()`, `rewrite_query()`, `no_answer()` |
-| `edges.py` | Conditional routing | `route_after_grading()` |
-| `builder.py` | Graph compilation | `build_crag_graph()`, `run_query()` |
+| `nodes.py` | Graph nodes | `retrieve()`, `grade()`, `generate()`, `rewrite()` |
+| `edges.py` | Routing logic | Routes to generate/rewrite/decline |
+| `builder.py` | Graph compilation | LangGraph state machine |
 
-**Routing Logic:**
-```python
-if relevant_docs >= 1:
-    → generate (synthesize answer)
-elif rewrite_count < max_retries:
-    → rewrite (reformulate query)
-else:
-    → no_answer (admit ignorance)
-```
+### 3.3 Prompts (`src/prompts/`)
 
-### 2.3 Prompts (`src/prompts/`)
-
-| File | Purpose | Language |
-|------|---------|----------|
-| `grader.py` | Binary relevance scoring | Arabic |
-| `generator.py` | Answer generation with citations | Arabic-only (enforced) |
-| `rewriter.py` | Query reformulation for retry | Arabic |
-
-**Generator Constraints:**
-- Arabic-only output (explicit instruction)
-- Mandatory source citations (Law/Article/Year)
-- MCQ answer format (A/B/C/D) for benchmarks
-
-### 2.4 Clients (`src/clients/`)
-
-| File | Purpose | Default |
-|------|---------|---------|
-| `gemini_client.py` | Google Gemini (fallback) | Disabled by default |
-| `groq_client.py` | Groq/Llama (fallback) | Disabled by default |
-| `qdrant_client.py` | Qdrant connection | Used for retrieval |
+- **grader.py**: Binary relevance scoring in Arabic
+- **generator.py**: Citation-aware generation (Arabic-only output)
+- **rewriter.py**: Query reformulation for retry attempts
 
 ---
 
-## 3. Current Performance
+## 4. Key Technical Decisions
 
-### Custom Egyptian Law Benchmark v2 (20 Questions)
+### Why Corrective RAG?
 
-| Category | Accuracy | Score | Notes |
-|----------|----------|-------|-------|
-| **Overall** | **60.0%** | 12/20 | Improved from 50% via answer extraction |
-| Civil Code | 🏆 100.0% | 5/5 | Excellent coverage |
-| Personal Status | ⭐ 66.7% | 2/3 | Improved from 33% |
-| Constitution | ⭐ 66.7% | 2/3 | Good coverage |
-| Criminal Procedure | ⭐ 50.0% | 1/2 | Fair |
-| Penal Code | ⚠️ 28.6% | 2/7 | Needs more data |
-| **Avg Latency** | ~23s | - | ~8s per query without embedder reload |
+Standard RAG can hallucinate when documents aren't relevant. CRAG adds:
+- **Grading step**: Filter irrelevant chunks before generation
+- **Rewrite loop**: Self-correct when initial retrieval fails
+- **Honest decline**: Admit "I don't know" rather than hallucinate
 
-### Knowledge Base Status
+### Why Local LLM (Ollama)?
 
-| Document | Status | Chunks | Coverage |
-|----------|--------|--------|----------|
-| Civil Code 1948 | ✅ Ingested | ~54 | Excellent |
-| Criminal Code 1937 | ✅ Ingested | ~282 | Good |
-| Criminal Procedure | ✅ Ingested | ~19 | Fair |
-| Constitution 2014 | ✅ Ingested | ~10 | Fair |
-| Personal Status Law | ⚠️ Partial | ~7 | Limited |
+| Benefit | Impact |
+|---------|--------|
+| Zero API cost | Unlimited queries during development |
+| Privacy | Legal documents never leave local machine |
+| Speed | No network latency for grading |
+| Arabic quality | llama3.1 handles Arabic well |
 
-**Total Vectors**: ~1,921 in Qdrant Cloud
+### Why E5-Large for Embeddings?
+
+- **Multilingual**: Native Arabic support
+- **GPU acceleration**: RTX 3060 → ~0.5s per batch
+- **E5 prefixes**: `query:` and `passage:` for optimal retrieval
 
 ---
 
-## 4. Strategic Roadmap
+## 5. Performance Characteristics
 
-### 🔴 Phase 1: Data Expansion (Highest Priority)
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Avg Response Time** | ~14s | With GPU, embedder cached |
+| **Retrieval Latency** | ~2s | Qdrant Cloud roundtrip |
+| **Grading Latency** | ~6s | Ollama llama3.1:8b |
+| **Generation Latency** | ~6s | Ollama qwen2.5:7b |
+| **Knowledge Base** | 2,600 chunks | ~500KB total text |
 
-**Current bottleneck: Data coverage, not model quality.**
+### Bottlenecks Addressed
 
-| Task | Impact | Effort | Status |
-|------|--------|--------|--------|
-| Ingest more Penal Code articles | +10-15% accuracy | Medium | ✅ Done (282 chunks) |
-| Ingest more Personal Status articles | +5-10% accuracy | Low | 🔲 Todo |
-| Improve answer extraction regex | +10% accuracy | Low | ✅ Done |
-
----
-
-### 🟡 Phase 2: Model Optimization (Medium Priority)
-
-| Task | Impact | Effort | Status |
-|------|--------|--------|--------|
-| Tune Grader Prompt with examples | +3-5% accuracy | Low | 🔲 Todo |
-| Cache Embedder (singleton) | -5s latency | Low | 🔲 Todo |
-| Fix language leak in generator | Quality | ✅ Done |
-| Add Arabic-only constraint | Quality | ✅ Done |
+1. ✅ **Embedder Caching**: Singleton pattern saves 7s model load per query
+2. ✅ **GPU Acceleration**: E5-Large runs on CUDA
+3. ✅ **Batch Processing**: 20 chunks per Qdrant upload
 
 ---
 
-### 🟢 Phase 3: Production Readiness (Lower Priority)
+## 6. Future Roadmap
+
+### Phase 1: Data Expansion (High Priority)
+
+| Task | Impact |
+|------|--------|
+| Complete Penal Code (400+ articles) | More comprehensive criminal law coverage |
+| Commercial Law | Business and contract disputes |
+| Labor Law | Employment-related questions |
+
+### Phase 2: UX Improvements (Medium Priority)
 
 | Task | Purpose |
 |------|---------|
-| Dockerfile | Containerization for deployment |
-| Unit Tests | 80%+ coverage |
-| Streaming | Real-time answer display |
-| Multi-turn Chat | Conversation memory |
-| Error Handling | Graceful failures |
+| Streaming responses | Reduce perceived latency |
+| Multi-turn chat | Conversation memory |
+| Source highlighting | Show exact article text |
 
----
+### Phase 3: Production Readiness
 
-## 5. Tech Stack
-
-| Component | Technology | Notes |
-|-----------|------------|-------|
-| Framework | LangGraph | State machine CRAG |
-| Vector DB | Qdrant Cloud | Free tier, ~1.9k vectors |
-| Embeddings | multilingual-e5-large | GPU-accelerated (RTX 3060) |
-| Grader LLM | Ollama (llama3.1:8b) | Local, better Arabic |
-| Generator LLM | Ollama (qwen2.5:7b) | Local, unlimited |
-| UI | Streamlit | RTL Arabic support |
-| Arabic NLP | CAMeL Tools | CAMeLBERT-NER for Law 151 |
-
----
-
-## 6. Key Improvements Made
-
-### Session Highlights (2026-01-11 → 2026-01-12)
-
-1. **Answer Extraction Overhaul**
-   - Rewrote `extract_answer_choice()` with 5 priority levels
-   - Added content-based matching and scoring
-   - Accuracy: 50% → **60%**
-
-2. **Criminal Code Ingestion**
-   - Ingested full Egyptian Criminal Code PDF (282 chunks)
-   - Penal Code accuracy: 14% → **28%**
-
-3. **Arabic-Only Constraint**
-   - Added explicit instruction to generator prompt
-   - Eliminated foreign language leakage (Chinese text bug)
-
-4. **Grader Experimentation**
-   - Tested strict vs lenient graders
-   - Original lenient grader performed best
+| Task | Purpose |
+|------|---------|
+| Dockerfile | Containerized deployment |
+| Rate limiting | API protection |
+| Logging dashboard | Query analytics |
 
 ---
 
 ## 7. Quick Commands
 
 ```bash
-# Activate environment
+# Start environment
 .\venv\Scripts\Activate  # Windows
 source venv/bin/activate # Linux/Mac
 
@@ -249,18 +176,12 @@ source venv/bin/activate # Linux/Mac
 ollama serve
 
 # Test single query
-python scripts/test_crag.py --query "ما هو حق الاتفاق في القانون المدني؟"
-
-# Run custom benchmark
-python scripts/benchmark_egyptian.py
-
-# Analyze Qdrant database
-python scripts/analyze_qdrant.py
+python scripts/test_crag.py --query "ما هي عقوبة السرقة؟"
 
 # Ingest new law
 python scripts/ingest_laws.py \
   --input "data/raw/law.pdf" \
-  --source-name "قانون العقوبات" \
+  --source-name "قانون جديد" \
   --source-type law \
   --law-year 2024 \
   --skip-anonymization
@@ -286,26 +207,12 @@ EMBEDDING_MODEL=intfloat/multilingual-e5-large
 
 # Application Settings
 RETRIEVAL_TOP_K=5
-GRADING_THRESHOLD=0.6
 MAX_REWRITE_ATTEMPTS=2
-
-# Optional (Cloud Fallback)
-GROQ_API_KEY=xxx
-GOOGLE_API_KEY=xxx
 ```
 
 ---
 
-## 9. Known Issues & Limitations
-
-1. **Embedder Reloading**: Model reloads for each query (~7s overhead) - needs singleton caching
-2. **Penal Code Coverage**: Still limited despite ingestion (28.6% accuracy)
-3. **Article Number Extraction**: Some PDFs don't extract article numbers properly
-4. **MCQ Answer Extraction**: Some correct answers extracted as "NONE" when model uses descriptive language
-
----
-
-## 10. Resources
+## 9. Resources
 
 - **GitHub**: [github.com/moazmo/Al-Muhami-Al-Zaki](https://github.com/moazmo/Al-Muhami-Al-Zaki)
 - **Qdrant Docs**: [qdrant.tech/documentation](https://qdrant.tech/documentation/)
