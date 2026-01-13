@@ -30,7 +30,7 @@
 
 | Capability | Description |
 |------------|-------------|
-| 📚 **2,600+ Legal Articles** | Civil Code, Penal Code, Constitution, Personal Status, Criminal Procedure |
+| 📚 **1,300+ Legal Chunks** | Civil Code, Penal Code, Constitution, Personal Status, Criminal Procedure |
 | 🔍 **Semantic Arabic Search** | Multilingual E5-Large embeddings optimized for Arabic legal text |
 | ⚖️ **Mandatory Citations** | Every answer includes specific Law Number, Article, and Year |
 | 🔒 **Privacy Compliant** | CAMeLBERT-NER for PII anonymization (Law 151/2020) |
