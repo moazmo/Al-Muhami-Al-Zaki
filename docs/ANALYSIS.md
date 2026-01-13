@@ -1,6 +1,6 @@
 # Al-Muhami Al-Zaki — Technical Analysis & Roadmap
 
-> Last Updated: 2026-01-12 | Status: **MVP Complete**
+> Last Updated: 2026-01-13 | Status: **MVP Complete**
 
 ---
 
@@ -33,7 +33,7 @@
         ▼                     ▼
 ┌──────────────┐      ┌──────────────┐
 │ Qdrant Cloud │      │ Ollama Local │
-│ (2,600 vecs) │      │ (llama3.1)   │
+│ (1,303 vecs) │      │ (llama3.1)   │
 └──────────────┘      └──────────────┘
 ```
 
@@ -55,14 +55,14 @@
 
 | Document | Chunks | Key Content |
 |----------|--------|-------------|
-| Civil Code 1948 | ~54 | Contracts, property, obligations |
-| Criminal Code 1937 | ~282 | Penalties, crimes, procedures |
-| Family Laws 2000 | ~179 | Marriage, divorce, inheritance |
-| Personal Status | ~7 | Custody, alimony, rights |
-| Constitution 2014 | ~10 | Fundamental rights, governance |
-| Criminal Procedure | ~19 | Investigation, trial procedures |
+| Civil Code 1948 | 345 | Contracts, property, obligations |
+| Criminal Code 1937 | 249 | Penalties, crimes, procedures |
+| Family Laws 2000 | 173 | Marriage, divorce, inheritance |
+| Personal Status | 116 | Custody, alimony, rights |
+| Constitution 2014 | 144 | Fundamental rights, governance |
+| Criminal Procedure | 276 | Investigation, trial procedures |
 
-**Total**: ~2,600 legal article chunks in Qdrant Cloud
+**Total**: 1,303 legal chunks in Qdrant Cloud (after data normalization fix)
 
 ---
 
@@ -74,6 +74,7 @@
 |------|---------|--------------|
 | `loader.py` | Load PDF/TXT/DOCX | pdfplumber for Arabic PDFs |
 | `chunker.py` | Arabic-aware splitting | Respects article boundaries (مادة/باب/فصل) |
+| `normalizer.py` | Fix reversed text | Auto-detects and corrects mirrored Arabic |
 | `anonymizer.py` | PII masking | CAMeLBERT-NER, Law 151 compliant |
 | `embedder.py` | GPU embedding | Singleton cache for 7s speedup |
 
@@ -127,7 +128,7 @@ Standard RAG can hallucinate when documents aren't relevant. CRAG adds:
 | **Retrieval Latency** | ~2s | Qdrant Cloud roundtrip |
 | **Grading Latency** | ~6s | Ollama llama3.1:8b |
 | **Generation Latency** | ~6s | Ollama qwen2.5:7b |
-| **Knowledge Base** | 2,600 chunks | ~500KB total text |
+| **Knowledge Base** | 1,303 chunks | ~300KB total text |
 
 ### Bottlenecks Addressed
 

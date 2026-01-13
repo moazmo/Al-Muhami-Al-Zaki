@@ -6,7 +6,7 @@
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![Law 151 Compliant](https://img.shields.io/badge/Law%20151%2F2020-Compliant-orange.svg)
-![Knowledge Base](https://img.shields.io/badge/Knowledge_Base-2600+_Articles-brightgreen.svg)
+![Knowledge Base](https://img.shields.io/badge/Knowledge_Base-1300+_Chunks-brightgreen.svg)
 ![Ollama](https://img.shields.io/badge/LLM-Ollama_Local-purple.svg)
 
 <div align="center">
@@ -18,7 +18,7 @@
 
 **Al-Muhami Al-Zaki** is a Corrective RAG (CRAG) system designed for Egyptian legal research. Unlike standard RAG systems that may hallucinate, this system:
 
-1. **Retrieves** relevant legal documents from a 2,600+ article knowledge base
+1. **Retrieves** relevant legal documents from a 1,300+ chunk knowledge base
 2. **Grades** each document for relevance using a local LLM
 3. **Validates** context before answering — admits ignorance when unsure
 4. **Generates** answers with **mandatory source citations** (Article, Law, Year)
@@ -46,7 +46,7 @@
 User: "ما هي عقوبة السرقة في القانون المصري؟"
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ 1. RETRIEVE: Search 2,600+ articles for "عقوبة السرقة"          │
+│ 1. RETRIEVE: Search 1,300+ chunks for "عقوبة السرقة"          │
 │    → Found 5 relevant chunks from قانون العقوبات               │
 ├─────────────────────────────────────────────────────────────────┤
 │ 2. GRADE: LLM evaluates each chunk for relevance                │
@@ -92,7 +92,7 @@ Response includes:
                                   ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                         RETRIEVE                                │
-│         Qdrant Vector Search (2,600+ articles)                  │
+│         Qdrant Vector Search (1,300+ chunks)                  │
 └─────────────────────────────────┬───────────────────────────────┘
                                   │
                                   ▼
@@ -163,6 +163,7 @@ Al-Muhami-Al-Zaki/
 │   ├── ingest/           # Document processing pipeline
 │   │   ├── loader.py     # PDF/TXT/DOCX loading
 │   │   ├── chunker.py    # Arabic-aware legal splitting
+│   │   ├── normalizer.py # Fixes reversed Arabic text from PDFs
 │   │   ├── anonymizer.py # PII masking (Law 151)
 │   │   └── embedder.py   # E5 embedding + Qdrant
 │   │
@@ -205,7 +206,7 @@ Output: "حكم ضد [شخص] المقيم في [مكان]"
 | Component | Technology | Purpose |
 |-----------|------------|---------|
 | **Framework** | LangGraph | Cyclic state machine for CRAG |
-| **Vector DB** | Qdrant Cloud | 2,600+ legal article vectors |
+| **Vector DB** | Qdrant Cloud | 1,300+ legal chunk vectors |
 | **Embeddings** | multilingual-e5-large | Arabic-optimized, GPU-accelerated |
 | **Grader LLM** | Ollama (llama3.1:8b) | Local relevance scoring |
 | **Generator** | Ollama (qwen2.5:7b) | Citation-aware generation |
